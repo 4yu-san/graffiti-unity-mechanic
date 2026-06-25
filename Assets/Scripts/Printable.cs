@@ -26,6 +26,8 @@ public class Paintable : MonoBehaviour
 
     void Awake()
     {
+        Debug.Log("Paintable Awake on " + gameObject.name);
+        //Shader.Find("Custom/SprayBrush") == null;
         _renderer = GetComponent<Renderer>();
         _mesh     = GetComponent<MeshFilter>().sharedMesh;
 
@@ -35,6 +37,7 @@ public class Paintable : MonoBehaviour
         Clear(_temp);
 
         _brushMat = new Material(Shader.Find("Custom/SprayBrush"));
+        Debug.Log("Brush shader found: " + (_brushMat.shader != null) + " | shader name: " + _brushMat.shader.name);
         _cmd = new CommandBuffer { name = "SprayPaint" };
 
         _renderer.material.SetTexture(PaintMaskID, PaintMask);

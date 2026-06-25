@@ -24,6 +24,7 @@ public class SprayPainter : MonoBehaviour
 
     void Spray()
     {
+        //Debug.Log("hit " + hit.collider.name);
         for (int i = 0; i < dropletsPerTick; i++)
         {
             Vector3 dir = Quaternion.Euler(
@@ -33,6 +34,7 @@ public class SprayPainter : MonoBehaviour
             if (!Physics.Raycast(nozzle.position, dir, out var hit, range, paintableMask))
                 continue;
 
+            Debug.Log("Ray hit: " + hit.collider.name + " on layer: " + LayerMask.LayerToName(hit.collider.gameObject.layer));
             var p = hit.collider.GetComponent<Paintable>();
             if (p == null) continue;
 
