@@ -12,7 +12,7 @@ public class SprayPainter : MonoBehaviour
     public float flow = 0.18f;
 
     [Header("Cone")]
-    public int dropletsPerTick = 8;
+    public int dropletsPerTick = 10;
     public float coneAngle = 4f;
 
     public LayerMask paintableMask;
@@ -27,9 +27,13 @@ public class SprayPainter : MonoBehaviour
         //Debug.Log("hit " + hit.collider.name);
         for (int i = 0; i < dropletsPerTick; i++)
         {
-            Vector3 dir = Quaternion.Euler(
-                Random.Range(-coneAngle, coneAngle),
-                Random.Range(-coneAngle, coneAngle), 0f) * nozzle.forward;
+            // Circular spread, biased toward the center like a real nozzle.
+            // sqrt of a random radius keeps it from clustering in the middle too hard;
+            // remove the sqrt for a denser center.
+            float angle = Random.Range(0f, Mathf.PI * 2f);
+            float radius = Mathf.Pow(Random.value, 0.7f) * coneAngle;  // 0.7 = denser center
+            Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+            Vector3 dir = Quaternion.Euler(offset.x, offset.y, 0f) * nozzle.forward;
 
             if (!Physics.Raycast(nozzle.position, dir, out var hit, range, paintableMask))
                 continue;

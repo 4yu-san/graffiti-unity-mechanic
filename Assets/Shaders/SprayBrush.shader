@@ -61,13 +61,21 @@ Shader "Custom/SprayBrush"
                 fixed4 prev = tex2D(_MainTex, i.uv);
 
                 float d = distance(i.worldPos, _BrushWorldPos.xyz);
-                float mask = 1.0 - smoothstep(_BrushSize * _BrushHardness,
-                                              _BrushSize, d);
 
+                // Round, soft falloff: 1 at center, fading to 0 at the edge.
+                // pow shapes the curve — higher = tighter hot center, softer edge.
+                float t = saturate(1.0 - d / _BrushSize);
+                float mask = pow(t, 1.0 + _BrushHardness * 3.0);
+
+                // Grazing-angle thinning (keep this — it's correct and round-safe)
                 float facing = saturate(dot(i.worldNrm, -_BrushDir.xyz));
                 mask *= facing;
 
-                mask *= 0.65 + 0.35 * hash(floor(i.worldPos * 220.0));
+                // Gentle radial stipple — perturbs density without squaring the shape.
+                // Noise keyed off direction-from-center, not a world grid, so no blocks.
+                float2 fromCenter = i.worldPos.xy - _BrushWorldPos.xy;
+                float n = hash(floor(normalize(float3(fromCenter, 0.001)) * 30.0 + d * 60.0));
+                mask *= 0.82 + 0.18 * n;
 
                 float add  = mask * _BrushFlow;
                 float newA = saturate(prev.a + add);
@@ -76,7 +84,7 @@ Shader "Custom/SprayBrush"
                 o.rgb = newA > 1e-4
                     ? (prev.rgb * prev.a + _BrushColor.rgb * add) / newA
                     : _BrushColor.rgb;
-                o.a = newA;
+                    o.a = newA;
                 return o;
             }
             ENDCG
